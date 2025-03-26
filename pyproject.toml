@@ -1,9 +1,9 @@
 [project]
-name = 'br-name-location-generator'         
-version = '0.1.0'                  
-description = 'Brazilian Name and Location Generator' 
+name = 'ptbr_sampler'
+version = '0.1.0'
+description = 'Brazilian Name and Location Generator'
 authors = [{name = 'arthrod', email = 'arthrod@gmail.com'}]
-requires-python = '>=3.12'         
+requires-python = '>=3.12'
 keywords = ['brazil', 'name', 'location', 'generator']
 dependencies = [
     'tqdm',
@@ -30,6 +30,9 @@ dependencies = [
     "pytest-cov>=6.0.0",
     "richer>=0.1.6",
     "aiofiles>=24.1.0",
+    "loguru>=0.7.3",
+    "uvloop>=0.21.0",
+    "pydantic>=2.10.6",
 ]
 
 [project.optional-dependencies]
@@ -63,41 +66,41 @@ dev = [
 ]
 
 [build-system]
-requires = ['hatchling']           
-build-backend = 'hatchling.build'   
+requires = ['hatchling']
+build-backend = 'hatchling.build'
 
 [tool.ruff]
-include = [                        
+include = [
     'pyproject.toml',
-    'src/**/*.{py,js,jsx,ts,tsx,css,scss,html,sh,yaml,yml}',
-    'scripts/**/*.{py,js,jsx,ts,tsx,css,scss,html,sh,yaml,yml}', 
+    'ptbr_sampler/**/*.{py,js,jsx,ts,tsx,css,scss,html,sh,yaml,yml}',
+    'scripts/**/*.{py,js,jsx,ts,tsx,css,scss,html,sh,yaml,yml}',
 ]
 line-length = 140
 fix = true
-target-version = 'py312'           
+target-version = 'py312'
 exclude = ['build', 'dist', '*.egg-info']
 
-         
+
 [tool.ruff.lint.per-file-ignores]
-'__init__.py' = ['E402']         
-'**/{tests,docs,tools}/*' = ['E402'] 
-'nbs/*' = ['E402', 'F401']  
+'__init__.py' = ['E402']
+'**/{tests,docs,tools}/*' = ['E402']
+'nbs/*' = ['E402', 'F401']
 
 
 [tool.ruff.format]
-quote-style = 'single'             
-docstring-code-format = true      
-docstring-code-line-length = 'dynamic'  
+quote-style = 'single'
+docstring-code-format = true
+docstring-code-line-length = 'dynamic'
 
 [tool.ruff.lint.pyupgrade]
-keep-runtime-typing = true         
+keep-runtime-typing = true
 
 [tool.hatch.build.targets.wheel]
-packages = ['src']                 
+packages = ['ptbr_sampler']
 
 [tool.mypy]
-python_version = '3.12'           
-strict = true      
+python_version = '3.12'
+strict = true
 no_implicit_optional = true
 warn_unused_ignores = true
 show_error_codes = true
@@ -127,9 +130,9 @@ nbs_path = "nbs"
 recursive = true
 toc = true
 clean_ids = true
-black_formatting = false  
+black_formatting = false
 
 [tool.ruff.lint]
 ignore = ['TRY401', 'TRY300', 'G202', 'G004', 'ISC001', 'W191', 'COM812', 'W292', 'C408', 'COM819', 'E731', 'ERA001', 'G004', 'RET503', 'RUF012', 'S311', 'SIM108', 'SIM300', 'T201', 'TRY003', 'TRY301', 'W293']
 select = ['A', 'ASYNC', 'B', 'BLE', 'C4', 'COM', 'DTZ', 'E', 'ERA', 'EXE', 'F', 'FLY', 'G', 'I', 'ICN', 'ISC', 'LOG', 'PERF', 'PIE', 'PLC', 'PLE', 'PLW', 'PT', 'PTH', 'RET', 'RUF', 'S', 'SIM', 'T', 'TRY', 'UP', 'W']
-unfixable = ['B']        
+unfixable = ['B']
