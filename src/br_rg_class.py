@@ -1,4 +1,4 @@
-import random
+import secrets
 
 
 class BrazilianRG:
@@ -100,7 +100,7 @@ class BrazilianRG:
         """
         Generate a string by replacing each '#' in the pattern with a random digit (0-9).
         """
-        return ''.join(str(random.randint(0, 9)) if char == '#' else char for char in pattern)
+        return ''.join(str(secrets.SystemRandom().randint(0, 9)) if char == '#' else char for char in pattern)
 
     def generate(self, state: str | None = None, include_issuer: bool = True, include_state_prefix: bool = False, only_rg: bool = False):
         """
@@ -126,7 +126,7 @@ class BrazilianRG:
         # For MG, randomly decide to include the "MG" prefix (state code).
         if self.state == 'MG':
             # Randomly choose True or False
-            mg_prefix = random.choice([True, False])
+            mg_prefix = secrets.choice([True, False])
             if mg_prefix:
                 parts.append('MG')
         else:
