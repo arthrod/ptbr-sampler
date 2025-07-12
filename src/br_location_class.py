@@ -1,6 +1,6 @@
 import json
-import random
 from pathlib import Path
+import secrets
 
 
 class BrazilianLocationSampler:
@@ -113,7 +113,7 @@ class BrazilianLocationSampler:
         Returns:
             Tuple of (state_name, state_abbreviation)
         """
-        state_name = random.choices(self.state_names, weights=self.state_weights, k=1)[0]
+        state_name = secrets.SystemRandom().choices(self.state_names, weights=self.state_weights, k=1)[0]
         state_abbr = self.data['states'][state_name]['state_abbr']
         return state_name, state_abbr
 
@@ -135,7 +135,7 @@ class BrazilianLocationSampler:
         if state_abbr not in self.city_weights_by_state:
             raise ValueError(f'No cities found for state: {state_abbr}')
 
-        city_name = random.choices(self.city_names_by_state[state_abbr], weights=self.city_weights_by_state[state_abbr], k=1)[0]
+        city_name = secrets.SystemRandom().choices(self.city_names_by_state[state_abbr], weights=self.city_weights_by_state[state_abbr], k=1)[0]
 
         return city_name, state_abbr
 
@@ -168,13 +168,13 @@ class BrazilianLocationSampler:
 
         # Try using specific CEPs first
         if city_data.get('ceps'):
-            return random.choice(city_data['ceps'])
+            return secrets.choice(city_data['ceps'])
 
         # Fall back to generating from CEP range if available
         if city_data.get('cep_range_begins') and city_data.get('cep_range_ends'):
             range_start = int(city_data['cep_range_begins'].replace('-', ''))
             range_end = int(city_data['cep_range_ends'].replace('-', ''))
-            return str(random.randint(range_start, range_end))
+            return str(secrets.SystemRandom().randint(range_start, range_end))
 
     def _format_cep(self, cep: str, with_dash: bool = True) -> str:
         """Format CEP string with optional dash.

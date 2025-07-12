@@ -2,9 +2,9 @@
 
 
 import re
-from random import randint
 
 from .util import clean_id, pad_id
+import secrets
 
 """
 Functions for working with Brazilian PIS/PASEP identifiers.
@@ -64,7 +64,7 @@ def pad_pis(pis, validate=False):
 
 def random_pis(formatted=True):
     """Create a random, valid PIS identifier."""
-    pis = randint(1000000000, 9999999999)
+    pis = secrets.SystemRandom().randint(1000000000, 9999999999)
     pis = str(pis) + str(pis_check_digit(pis))
     if formatted:
         return format_pis(pis)

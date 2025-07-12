@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import json
-import random
+import secrets
 
 
 def normalize_population_data(
@@ -125,16 +125,16 @@ def normalize_population_data(
 
     if cities_with_ceps:
         # Select a city weighted by population
-        selected_city_id, selected_city = random.choices(cities_with_ceps, weights=weights, k=1)[0]
+        selected_city_id, selected_city = secrets.SystemRandom().choices(cities_with_ceps, weights=weights, k=1)[0]
 
         # Step 2: Randomly pick a CEP from the selected city
         ceps_data = selected_city['ceps']
         if isinstance(ceps_data, list) and ceps_data:
             print(f'Selected city has {len(ceps_data)} CEPs in a list')
-            random_cep = random.choice(ceps_data)
+            random_cep = secrets.choice(ceps_data)
         elif isinstance(ceps_data, dict) and ceps_data:
             print(f'Selected city has {len(ceps_data)} CEPs in a dictionary')
-            random_cep = random.choice(list(ceps_data.values()))
+            random_cep = secrets.choice(list(ceps_data.values()))
         else:
             print('Selected city has a single CEP')
             random_cep = ceps_data

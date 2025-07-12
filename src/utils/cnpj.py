@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 
-import random
 from collections import namedtuple
 
 from .util import clean_id, pad_id
+import secrets
 
 """
 Functions for working with Brazilian company identifiers (CNPJ).
@@ -107,8 +107,8 @@ def parse_cnpj(cnpj, formatted=True):
 
 def random_cnpj(formatted=True):
     """Create a random, valid CNPJ identifier."""
-    firm = random.randint(10000000, 99999999)
-    establishment = random.choice(['0001', '0002', '0003', '0004', '0005'])
+    firm = secrets.SystemRandom().randint(10000000, 99999999)
+    establishment = secrets.choice(['0001', '0002', '0003', '0004', '0005'])
     cnpj = cnpj_from_firm_id(firm, establishment)
     if formatted:
         return format_cnpj(cnpj)

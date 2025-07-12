@@ -1,6 +1,6 @@
 import json
-import random
 from pathlib import Path
+import secrets
 
 
 class AddressProvider_for_offline:
@@ -618,7 +618,7 @@ class AddressProvider_for_offline:
         Returns:
             A random element from the sequence
         """
-        return random.choice(elements)
+        return secrets.choice(elements)
 
     def building_number(self) -> str:
         """
@@ -627,7 +627,7 @@ class AddressProvider_for_offline:
         Returns:
             A random building number as a string
         """
-        return str(random.randint(1, 999))
+        return str(secrets.SystemRandom().randint(1, 999))
 
     def last_name(self) -> str:
         """
