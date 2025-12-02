@@ -52,12 +52,13 @@ class LocationBatch(BaseModel):
 
 
 async def save_to_jsonl_file(data: List[LocationItem], filename: str, append: bool = True) -> None:
-    """Save generated samples to a JSONL file asynchronously.
-
-    Args:
-        data: List of LocationItem objects containing sample data
-        filename: Path to the output JSONL file
-        append: If True, append to existing file instead of overwriting
+    """
+    Append or write a list of LocationItem records to a JSONL file.
+    
+    Parameters:
+        data (List[LocationItem]): The records to write as individual JSON lines.
+        filename (str): Path to the output JSONL file; parent directories will be created if missing.
+        append (bool): If True, append to the file; if False, overwrite the file.
     """
     mode = 'a' if append else 'w'
 
@@ -72,16 +73,16 @@ async def save_to_jsonl_file(data: List[LocationItem], filename: str, append: bo
 
 async def get_address_data_batch(location_items: List[LocationItem], make_api_call: bool = False, progress_callback: callable = None, num_workers: int = 100) -> List[LocationItem]:
     """
-    Get address data for multiple CEPs and update the LocationItems.
-
-    Args:
-        location_items: List of LocationItem objects to be updated
-        make_api_call: Whether to make API calls or generate data
-        progress_callback: Optional callback function to report progress
-        num_workers: Number of workers to use for API calls (default: 100)
-
+    Populate address fields for a batch of LocationItem objects using either a CEP API or synthetic generation.
+    
+    Parameters:
+        location_items (List[LocationItem]): Items whose address fields may be filled or updated.
+        make_api_call (bool): If True, fetch address data from an external CEP service; if False, synthesize plausible address values.
+        progress_callback (callable | None): Optional async callback called with progress updates; receives (int, str) messages.
+        num_workers (int): Maximum concurrent workers to use when performing API requests.
+    
     Returns:
-        Updated list of LocationItem objects with address data
+        List[LocationItem]: A new list of LocationItem objects with street, neighborhood, and building_number populated where missing. Existing city and state values are preserved and not overridden.
     """
     if not location_items:
         return []
@@ -303,53 +304,46 @@ async def sample(
     batch_size: int = 100,
     num_workers: int = 100,
 ) -> List[LocationItem] | LocationItem:
-    """Generate random Brazilian samples with comprehensive information.
-
-    Args:
-        qty: Number of samples to generate
-        q: Alias for qty parameter (takes precedence if provided)
-        city_only: Only include city information
-        state_abbr_only: Only include state abbreviation
-        state_full_only: Only include full state name
-        only_cep: Only include CEP (postal code)
-        cep_without_dash: Format CEP without dash
-        make_api_call: Make API calls to get real address data
-        time_period: Time period for name generation
-        return_only_name: Only return name information (no location or documents)
-        name_raw: Return name in raw format
-        json_path: Path to JSON data file
-        names_path: Path to names data file
-        middle_names_path: Path to middle names data file
-        only_surname: Only generate surnames
-        top_40: Use only top 40 names
-        with_only_one_surname: Generate only one surname
-        always_middle: Always include middle name
-        only_middle: Only generate middle names
-        always_cpf: Always include CPF
-        always_pis: Always include PIS
-        always_cnpj: Always include CNPJ
-        always_cei: Always include CEI
-        always_rg: Always include RG
-        always_phone: Always include phone number
-        only_cpf: Only include CPF
-        only_pis: Only include PIS
-        only_cnpj: Only include CNPJ
-        only_cei: Only include CEI
-        only_rg: Only include RG
-        only_fone: Only include phone
-        include_issuer: Include issuer information for RG
-        only_document: Only generate document information
-        surnames_path: Path to surnames data file
-        locations_path: Path to locations data file
-        save_to_jsonl: Path to save results as JSONL
-        all_data: Include all available data
-        progress_callback: Callback function for progress updates
-        append_to_jsonl: Append to existing JSONL file instead of overwriting
-        batch_size: Number of items to process in each batch (default: 100)
-        num_workers: Number of workers to use for API calls (default: 100)
-
+    """
+    Generate Brazilian sample(s) containing location, name, contact, and document fields according to the provided options.
+    
+    Parameters:
+        qty (int): Number of samples to generate (alias `q` overrides if provided).
+        q (int | None): Alias for `qty`; takes precedence when provided.
+        city_only (bool): Return only city information when True.
+        state_abbr_only (bool): Return only state abbreviation when True.
+        state_full_only (bool): Return only full state name when True.
+        only_cep (bool): Include only CEP (postal code) for location.
+        cep_without_dash (bool): Format CEP without a dash when True.
+        make_api_call (bool): Enrich addresses using an external CEP API when True.
+        time_period (TimePeriod): Time period bias for name generation.
+        return_only_name (bool): Return only name fields when True.
+        name_raw (bool): Use raw name forms when True.
+        json_path (str | Path): Path to the location data JSON used by the location sampler.
+        names_path (str | Path): Path to additional names data JSON.
+        middle_names_path (str | Path): Path to middle names JSON.
+        surnames_path (str | Path): Path to surnames JSON.
+        only_surname (bool): Generate only surnames when True.
+        top_40 (bool): Prefer top 40 names when True.
+        with_only_one_surname (bool): Produce a single surname when True.
+        always_middle (bool): Always include a middle name when True.
+        only_middle (bool): Generate only middle names when True.
+        always_cpf, always_pis, always_cnpj, always_cei, always_rg, always_phone (bool):
+            Always include the corresponding document/phone when True.
+        only_cpf, only_pis, only_cnpj, only_cei, only_rg, only_fone (bool):
+            Include only the corresponding document/phone when True.
+        include_issuer (bool): Include RG issuer information when generating RG.
+        only_document (bool): Generate only document fields (no names or location) when True.
+        locations_path (str | Path): Optional path to override or supplement location/state/city data.
+        save_to_jsonl (str | None): Path to write results as JSONL; no file is written if None.
+        all_data (bool): Enable all available outputs; overrides many individual flags.
+        progress_callback (callable | None): Optional async callback function accepting (progress:int, message:str).
+        append_to_jsonl (bool): Append to existing JSONL file when True.
+        batch_size (int): Requested batch size for processing (the function enforces 100-item batches).
+        num_workers (int): Number of concurrent workers for API requests.
+    
     Returns:
-        List of LocationItem objects or single LocationItem if qty=1
+        List[LocationItem] or LocationItem: Generated sample objects; returns a single LocationItem when `qty` (or `q`) equals 1, otherwise a list of LocationItem.
     """
     logger.info(f'Starting sample generation. qty={qty}, api={make_api_call}, all_data={all_data}, save_to_jsonl={save_to_jsonl}')
     
@@ -561,10 +555,13 @@ def sample_sync(
     batch_size: int = 100,
     num_workers: int = 100,
 ) -> List[LocationItem] | LocationItem:
-    """Synchronous wrapper for the async sample function.
+    """
+    Provide a synchronous compatibility wrapper around the asynchronous `sample` function.
     
-    This provides backward compatibility for code that expects a synchronous function.
-    All parameters are passed directly to the async sample function.
+    All parameters are forwarded to `sample` with identical semantics.
+    
+    Returns:
+    	A single LocationItem when `qty` is 1, otherwise a list of LocationItem.
     """
     return asyncio.run(sample(
         qty=qty,

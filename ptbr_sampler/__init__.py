@@ -27,7 +27,12 @@ __version__ = '1.0.0'
 
 # Define functions to avoid circular imports
 def get_cli():
-    """Get the CLI application and main function."""
+    """
+    Retrieve the CLI application and its main callable.
+    
+    Returns:
+        tuple: (app, main) where `app` is the CLI application object and `main` is the callable that runs the CLI.
+    """
     from ptbr_sampler.cli import app, main
     return app, main
 

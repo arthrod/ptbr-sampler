@@ -19,14 +19,23 @@ class TestDocumentSampler:
     
     @pytest.fixture(scope="class")
     def test_data_dir(self):
-        """Fixture providing the test data directory."""
+        """
+        Provide a Path to the tests/results directory, creating it if necessary.
+        
+        Returns:
+            data_dir (Path): Path to the tests/results directory; the directory is created if it does not exist.
+        """
         data_dir = Path("tests/results")
         data_dir.mkdir(exist_ok=True, parents=True)
         return data_dir
     
     @pytest.mark.asyncio
     async def test_generate_cpf(self, document_sampler):
-        """Test generating CPF document."""
+        """
+        Verifies CPF generation produces correctly formatted and unformatted CPFs.
+        
+        Checks that a formatted CPF matches the pattern XXX.XXX.XXX-XX (length 14, dots at indices 3 and 7, dash at index 11) and that an unformatted CPF is exactly 11 numeric digits.
+        """
         # Generate a CPF with formatting
         cpf_formatted = await asyncio.to_thread(document_sampler.generate_cpf, True)
         

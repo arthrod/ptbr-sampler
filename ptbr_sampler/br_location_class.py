@@ -28,16 +28,16 @@ class BrazilianLocationSampler:
         self._calculate_weights()
 
     def update_cities(self, cities_data: dict) -> None:
-        """Update the cities data and recalculate weights.
-
-        This method allows updating the cities data after initialization,
-        which is useful when loading custom location data.
-
-        Args:
-            cities_data: Dictionary containing city data to update or add
-
+        """
+        Update or add city records in the sampler and recompute population weights.
+        
+        This method accepts a mapping of city_key -> city_data and applies updates to the internal cities dataset. For entries that match an existing city by state abbreviation and city_name, the existing record is replaced using its original key (preserving key/formatting); entries that do not match are added under their provided key. Entries missing `city_name` or `city_uf` are skipped (a warning is logged). After applying updates, sampling weights are recalculated.
+        
+        Parameters:
+            cities_data (dict): Mapping of city_key to city data objects to add or update.
+        
         Raises:
-            ValueError: If cities_data is not a valid dictionary
+            ValueError: If `cities_data` is not a dict.
         """
         if not isinstance(cities_data, dict):
             raise ValueError('cities_data must be a dictionary')
@@ -112,7 +112,18 @@ class BrazilianLocationSampler:
         self._calculate_weights()
 
     def _calculate_weights(self) -> None:
-        """Pre-calculate weights for states and cities based on population percentages."""
+        """
+        Prepare and normalize sampling weights and lookup maps for states and cities.
+        
+        Builds and normalizes state-level weights from self.data['states']['population_percentage'], ensures each city entry has a `city_name` (deriving it from the city_id when missing), and accumulates per-state city names and normalized city weights from each city's `population_percentage_state`. Also constructs a lookup mapping `city_data_by_name` keyed by `city_name`.
+        
+        Sets the following attributes on self:
+        - state_names: list of state display names in sampling order
+        - state_weights: list of normalized state weights summing to 1
+        - city_names_by_state: dict[state_abbr] -> list of city names for that state
+        - city_weights_by_state: dict[state_abbr] -> list of normalized city weights summing to 1 for that state
+        - city_data_by_name: dict[city_name] -> city data dict
+        """
         # Calculate state weights
         self.state_weights = []
         self.state_names = []
@@ -176,16 +187,14 @@ class BrazilianLocationSampler:
         return state_name, state_abbr
 
     def get_city(self, state_abbr: str | None = None) -> tuple[str, str]:
-        """Get a random city weighted by population percentage.
-
-        Args:
-            state_abbr: Optional state abbreviation to get city from specific state
-
+        """
+        Select a city name and its state abbreviation, weighted by city population within the selected state.
+        
+        Parameters:
+            state_abbr (str | None): Optional two-letter state abbreviation to restrict selection to that state. If omitted, a state is chosen first using population weights.
+        
         Returns:
-            Tuple of (city_name, state_abbreviation)
-
-        Raises:
-            ValueError: If no cities found for given state
+            tuple[str, str]: `(city_name, state_abbreviation)` of the selected city.
         """
         if state_abbr is None:
             _, state_abbr = self.get_state()
@@ -205,16 +214,19 @@ class BrazilianLocationSampler:
         return state_name, state_abbr, city_name
 
     def _get_random_cep_for_city(self, city_name: str) -> str:
-        """Generate random CEP from city's available CEPs or CEP range.
-
-        Args:
-            city_name: Name of city to get CEP for
-
+        """
+        Selects a CEP for the given city from its defined CEP list or by generating one from its CEP range.
+        
+        Uses a city's `ceps` list when available; otherwise generates a CEP within the city's `cep_range_begins` and `cep_range_ends`.
+        
+        Parameters:
+            city_name (str): City name to look up CEP data for.
+        
         Returns:
-            Random valid CEP from city's available CEPs or generated from range
-
+            A CEP string from the city's `ceps` list if present; otherwise a CEP generated from the city's CEP range.
+        
         Raises:
-            ValueError: If city not found or has no CEPs/CEP range
+            ValueError: If the city is not found or no CEPs and no CEP range are available for the city.
         """
         if city_name not in self.city_data_by_name:
             logger.error(f'City not found: {city_name}')
@@ -250,18 +262,16 @@ class BrazilianLocationSampler:
     def format_full_location(
         self, city: str, state: str, state_abbr: str, include_cep: bool = True, cep_without_dash: bool = False, name: str | None = None
     ) -> str:
-        """Format location information into a single string.
-
-        Args:
-            city: City name
-            state: State name
-            state_abbr: State abbreviation
-            include_cep: Whether to include CEP
-            cep_without_dash: Whether to format CEP without dash
-            name: Optional address name
-
+        """
+        Format a location string combining city, state and optional CEP.
+        
+        Parameters:
+            include_cep (bool): If True include a formatted CEP in the output.
+            cep_without_dash (bool): If True return the CEP without a dash; otherwise include a dash.
+            name (str | None): Optional address name (accepted but not used in the returned string).
+        
         Returns:
-            Formatted location string
+            formatted_location (str): "city - CEP, state (STATE_ABBR)" when CEP is included, otherwise "city, state (STATE_ABBR)".
         """
         base = f'{city}, {state} ({state_abbr})'
         if not include_cep:
@@ -286,17 +296,23 @@ class BrazilianLocationSampler:
         only_cep: bool = False,
         cep_without_dash: bool = False,
     ) -> str:
-        """Get a random location with various formatting options.
-
-        Args:
-            city_only: Return only city name
-            state_abbr_only: Return only state abbreviation
-            state_full_only: Return only full state name
-            only_cep: Return only CEP
-            cep_without_dash: Format CEP without dash
-
+        """
+        Produce a randomly sampled Brazilian location formatted according to the provided options.
+        
+        Parameters:
+            city_only (bool): If true, return only the city name.
+            state_abbr_only (bool): If true, return only the state abbreviation (UF).
+            state_full_only (bool): If true, return only the full state name.
+            only_cep (bool): If true, return only a CEP (postal code).
+            cep_without_dash (bool): If true, format the CEP without the dash separator.
+        
         Returns:
-            Formatted location string according to specified options
+            str: A formatted location string determined by the selected option(s). Examples:
+                 - city only: "São Paulo"
+                 - state abbr only: "SP"
+                 - state full only: "São Paulo"
+                 - CEP only: "01001000" or "01001-000"
+                 - full: "São Paulo - 01001-000, São Paulo (SP)"
         """
         if only_cep:
             city_name, _ = self.get_city()
@@ -316,24 +332,17 @@ class BrazilianLocationSampler:
         return self.format_full_location(city_name, state_name, state_abbr, True, cep_without_dash)
 
     def get_city_data_by_name(self, city_name: str, state_abbr: str) -> dict:
-        """Get city data using both city name and state abbreviation for reliable lookup.
+        """
+        Locate city data for a given city name and state abbreviation.
         
-        This method provides a more reliable way to lookup city data compared to
-        directly accessing city_data_by_name, especially when there are cities with
-        the same name in different states.
+        Performs a prioritized lookup: exact compound key "CityName_StateAbbr" in the cities index, a direct scan for matching `city_name` and `city_uf`, a verified lookup via `city_data_by_name`, and a case-insensitive fallback. Returns an empty dict if no match is found.
         
-        Args:
-            city_name: The name of the city to look up
-            state_abbr: The state abbreviation 
-            
+        Parameters:
+            city_name (str): The city name to look up.
+            state_abbr (str): The two-letter state abbreviation to disambiguate cities with the same name.
+        
         Returns:
-            dict: The city data dictionary or an empty dict if not found
-            
-        Examples:
-            >>> sampler = BrazilianLocationSampler('data/cities_with_ceps.json')
-            >>> data = sampler.get_city_data_by_name('São Paulo', 'SP')
-            >>> print(data.get('ddd'))
-            11
+            dict: The city data dictionary if found, otherwise an empty dict.
         """
         logger.debug(f"Looking up city data for {city_name}, {state_abbr}")
         

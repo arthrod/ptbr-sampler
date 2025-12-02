@@ -53,6 +53,14 @@ class PhoneNumber:
         return self.numerify(self.generator.parse(pattern))
 
     def service_phone_number(self) -> str:
+        """
+        Produce a Brazilian service phone number formatted from a randomly selected service pattern.
+        
+        The returned string matches one of the class's service number formats (for example "100", "128", "151" or other configured service patterns).
+        
+        Returns:
+            str: A service phone number string formatted according to the chosen pattern.
+        """
         pattern: str = self.random_element(self.services_phones_formats)
         return self.numerify(self.generator.parse(pattern))
 

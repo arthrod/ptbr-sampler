@@ -14,7 +14,12 @@ class TestBrazilianRG:
 
     @pytest.fixture(scope="class")
     def br_rg(self):
-        """Fixture providing an instance of BrazilianRG."""
+        """
+        Provide a pytest fixture that yields a fresh BrazilianRG instance for use in tests.
+        
+        Returns:
+            BrazilianRG: A new BrazilianRG instance.
+        """
         return BrazilianRG()
     
     @pytest.mark.asyncio

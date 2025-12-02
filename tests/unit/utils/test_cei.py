@@ -74,7 +74,11 @@ class TestCEI:
         
     @pytest.mark.asyncio
     async def test_cei_formatting(self):
-        """Test that generated CEI has proper formatting with punctuation."""
+        """
+        Verify generate_cei returns correctly formatted CEIs when requested and plain 12-digit strings otherwise.
+        
+        Asserts that a formatted CEI matches the pattern XX.XXX.XXXXX/XX (14 characters, '.' at positions 2 and 6, '/' at position 12) and that an unformatted CEI is exactly 12 characters long and contains no '.' or '/'.
+        """
         # Generate a formatted CEI
         cei = await asyncio.to_thread(generate_cei, formatted=True)
         

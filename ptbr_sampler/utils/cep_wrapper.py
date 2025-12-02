@@ -10,15 +10,15 @@ from loguru import logger
 
 async def get_cep_data(cep: str) -> dict[str, Any]:
     """
-    Retrieves address information for a single CEP using cep_service.js
-    which directly imports from the cep-promise package.
-
-    Args:
-        cep: A CEP (string).
-
+    Retrieve address information for a single Brazilian CEP.
+    
+    Attempts the external CEP service and returns the parsed JSON response. If the service returns a single-item list, that item is returned. On persistent failure returns an error dictionary containing the keys 'error' and 'cep'.
+    
+    Parameters:
+        cep (str): CEP value (digits or formatted string) to look up.
+    
     Returns:
-        A dictionary containing the address information.
-        Returns an error dictionary if there is an issue after 100 retry attempts.
+        dict[str, Any]: Parsed address information or an error dictionary with 'error' and 'cep'.
     """
     # Ensure cep is a string
     cep = str(cep)
@@ -91,14 +91,14 @@ async def get_cep_data(cep: str) -> dict[str, Any]:
 
 async def workers_for_multiple_cep(ceps: list[str], max_workers: int = 100) -> list[dict[str, Any]]:
     """
-    Process multiple CEPs concurrently using a worker pool.
-
-    Args:
-        ceps: List of CEP strings to process
-        max_workers: Maximum number of concurrent workers
-
+    Process a list of CEPs concurrently with a bounded worker pool and return results in the original input order.
+    
+    Parameters:
+        ceps (list[str]): CEP strings to process.
+        max_workers (int): Maximum number of concurrent worker tasks to use.
+    
     Returns:
-        List of dictionaries containing address information for each CEP
+        list[dict[str, Any]]: One result dictionary per input CEP, in the same order as `ceps`. Each entry is the address data on success or an error dictionary containing at least the keys `'error'` and `'cep'` on failure.
     """
     logger.info(f"Processing {len(ceps)} CEPs with {max_workers} workers")
     
@@ -115,6 +115,11 @@ async def workers_for_multiple_cep(ceps: list[str], max_workers: int = 100) -> l
 
     # Worker function that processes CEPs from the queue
     async def worker():
+        """
+        Worker coroutine that consumes CEPs from the shared queue, fetches each CEP's data with get_cep_data, and stores results in results_dict keyed by the CEP.
+        
+        On successful processing, stores the retrieved result under results_dict[cep] and marks the queue task done. On any exception, stores an error dict {'error': <message>, 'cep': cep} under the same key and marks the task done.
+        """
         while not queue.empty():
             try:
                 # Get a CEP from the queue
@@ -163,7 +168,17 @@ async def workers_for_multiple_cep(ceps: list[str], max_workers: int = 100) -> l
 
 
 async def display_cep_info(data):
-    """Display CEP information in a formatted way."""
+    """
+    Print CEP address information or error messages in a human-readable format.
+    
+    Parameters:
+        data (dict | list[dict]): A single CEP info dictionary or a list of such dictionaries. Each dictionary may contain:
+            - 'cep', 'state', 'city', 'neighborhood', 'street', 'service' : printed values (missing values shown as "N/A")
+            - 'error' : when present the function prints "Error: {error}" instead of address fields.
+    
+    Notes:
+        The function writes output to stdout and does not return a value.
+    """
     logger.debug(f"Displaying CEP info: {type(data)}")
     if isinstance(data, list):
         for cep_info in data:
@@ -196,6 +211,11 @@ if __name__ == '__main__':
 
         async def main():
             # If there's only one CEP, use get_cep_data directly
+            """
+            Coordinate fetching and displaying CEP information for the CEPs provided on the command line.
+            
+            Chooses a single-request path when exactly one CEP is given and a concurrent worker-pool path when multiple CEPs are provided, then prints the fetched results in a formatted form.
+            """
             if len(ceps) == 1:
                 logger.info(f"Processing single CEP: {ceps[0]}")
                 data = await get_cep_data(ceps[0])

@@ -674,23 +674,27 @@ class AddressProvider_for_offline:
 
     def first_name(self) -> str:
         """
-        Returns a random first name.
-
+        Return a random first name.
+        
         Returns:
-            A random first name as a string
+            A random first name string.
         """
         # Use the non_weighted_random_name method to get a random first name
         return self.non_weighted_random_name()
 
     def non_weighted_random_name(self, names_path: str = 'ptbr_sampler/data/names_data.json') -> str:
         """
-        Returns a random name from the names data file without weighting.
-
-        Args:
-            names_path: Path to the names data JSON file
-
+        Selects a random first name from a JSON names dataset.
+        
+        Attempts to load names from the JSON file at `names_path` and returns a randomly chosen name.
+        If the file is read but contains no names, returns "João". If the file cannot be opened or parsed,
+        returns "Maria".
+        
+        Parameters:
+            names_path (str): Path to the names data JSON file (default: 'ptbr_sampler/data/names_data.json').
+        
         Returns:
-            A random name as a string
+            str: A randomly selected name from the dataset, or a fallback name ("João" or "Maria") on empty data or load errors.
         """
         try:
             # Load names from the file
