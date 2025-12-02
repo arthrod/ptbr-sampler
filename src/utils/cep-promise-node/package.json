@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "node-fetch": "2.6.7",
-    "unfetch": "4.1.0"
+    "unfetch": "5.0.0"
   },
   "files": [
     "dist",
