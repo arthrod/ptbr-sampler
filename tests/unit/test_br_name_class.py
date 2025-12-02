@@ -23,7 +23,12 @@ class TestBRName:
     
     @pytest.fixture(scope="class")
     def test_data_dir(self):
-        """Fixture providing the test data directory."""
+        """
+        Provide the test data directory, creating it if it does not exist.
+        
+        Returns:
+            Path: Path object pointing to the tests/results directory (created if missing).
+        """
         data_dir = Path("tests/results")
         data_dir.mkdir(exist_ok=True, parents=True)
         return data_dir

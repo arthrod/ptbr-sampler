@@ -14,7 +14,12 @@ class TestBRLocation:
 
     @pytest.fixture(scope="class")
     async def br_location(self):
-        """Fixture providing an instance of BRLocation."""
+        """
+        Provide an initialized BRLocation instance for tests.
+        
+        Returns:
+            br_location (BRLocation): A BRLocation instance with its data loaded and ready for use in tests.
+        """
         location = BRLocation()
         await location.load_data()
         return location

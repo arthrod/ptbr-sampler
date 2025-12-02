@@ -170,6 +170,17 @@ distribution in Brazil.
 
     # Setup coroutine to run
     async def run_sample():
+        """
+        Run the end-to-end sampling workflow: prepare configuration, show progress UI, invoke the async sampler, and display completion or error panels.
+        
+        This coroutine applies "easy" mode overrides when requested, ensures output directories exist, renders a configuration summary, manages a Rich progress display (overall progress, per-batch progress, and optional API progress), and forwards a progress callback to the underlying sampler. It returns the value produced by the called sampler function.
+        
+        Returns:
+            results: The samples (or sampler-specific result structure) returned by `sampler_sample`.
+        
+        Raises:
+            typer.Exit: Raised when an unexpected error occurs during processing (exits the CLI with code 1).
+        """
         try:
             # Process easy mode if specified
             if easy is not None:

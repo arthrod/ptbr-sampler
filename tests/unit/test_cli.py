@@ -22,14 +22,29 @@ class TestCLI:
 
     @pytest.fixture(scope="class")
     def test_data_dir(self):
-        """Fixture providing the test data directory."""
+        """
+        Create and return the test data directory Path, ensuring it exists.
+        
+        Returns:
+            Path: Path to the created or existing 'tests/results' directory.
+        """
         data_dir = Path("tests/results")
         data_dir.mkdir(exist_ok=True, parents=True)
         return data_dir
     
     @pytest.fixture
     def sample_data(self):
-        """Fixture providing sample data for testing."""
+        """
+        Sample dataset of two person/location records used by tests.
+        
+        Each item is a dictionary with two top-level keys: `person` and `location`. The `person`
+        dictionary includes `name`, `gender`, `birthdate`, `age`, and `cpf`. The `location`
+        dictionary includes `city`, `state`, and an `address` dictionary with `street`,
+        `number`, `district`, and `cep`.
+        
+        Returns:
+            list: Two dictionaries representing sample people and their locations.
+        """
         return [
             {
                 "person": {
@@ -73,7 +88,18 @@ class TestCLI:
     
     @pytest.mark.asyncio
     async def test_write_and_read_jsonl(self, test_data_dir, sample_data):
-        """Test writing and reading JSONL files."""
+        """
+        Verify that write_jsonl writes a list of records to a JSONL file and that read_jsonl reads them back unchanged.
+        
+        Parameters:
+            test_data_dir (Path): Directory in which a temporary JSONL file will be created.
+            sample_data (list[dict]): List of records to write and read back.
+        
+        Description:
+            Creates a temporary JSONL file inside `test_data_dir`, writes `sample_data` using `write_jsonl`,
+            asserts the file was created, reads the file back using `read_jsonl`, and asserts the read data
+            matches `sample_data`. The temporary file is removed at the end of the test.
+        """
         # Create a temporary file path
         temp_file = test_data_dir / "test_write_read.jsonl"
         

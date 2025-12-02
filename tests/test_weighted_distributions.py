@@ -68,14 +68,18 @@ async def generate_test_samples(sample_size=5000):
 
 
 def analyze_name_distribution(samples, top_n=20):
-    """Analyze the distribution of first names and compare to expected weights.
+    """
+    Compare observed first-name frequencies in the provided samples against expected percentages from ptbr_sampler/data/names_data.json.
     
-    Args:
-        samples: List of sample items to analyze
-        top_n: Number of top names to analyze
-        
+    Parameters:
+        samples: Iterable of sample objects where each item has a `name` attribute representing the first name.
+        top_n (int): Number of top names to include in the comparison.
+    
     Returns:
-        DataFrame with name distribution comparison
+        pandas.DataFrame: Rows for the top `top_n` most frequent names with columns:
+            - 'Name': first name.
+            - 'Observed (%)': observed percentage in the samples.
+            - 'Expected (%)': expected percentage taken from the UNTIL_2010 period in names_data.json.
     """
     logger.info("Analyzing first name distribution...")
     
@@ -113,14 +117,17 @@ def analyze_name_distribution(samples, top_n=20):
 
 
 def analyze_surname_distribution(samples, top_n=20):
-    """Analyze the distribution of surnames and compare to expected weights.
+    """
+    Compare observed surname frequencies in samples with expected percentages from ptbr_sampler/data/surnames_data.json.
     
-    Args:
-        samples: List of sample items to analyze
-        top_n: Number of top surnames to analyze
-        
+    This function extracts surname components from each sample's `surnames` string (skipping or combining common Brazilian prefixes such as "da", "de", "do", "das", "dos", "e"), computes observed percentages for each surname token, and pairs them with expected percentages loaded from the surnames data file. It returns the top `top_n` surnames by observed frequency.
+    
+    Parameters:
+        samples (Iterable): Iterable of sample objects where each object has a `surnames` string attribute; samples with empty or missing `surnames` are ignored.
+        top_n (int): Number of most frequent surnames to include in the returned comparison.
+    
     Returns:
-        DataFrame with surname distribution comparison
+        pandas.DataFrame: DataFrame with columns `Surname`, `Observed (%)`, and `Expected (%)` for the top `top_n` surnames.
     """
     logger.info("Analyzing surname distribution...")
     
@@ -184,13 +191,14 @@ def analyze_surname_distribution(samples, top_n=20):
 
 
 def analyze_state_distribution(samples):
-    """Analyze the distribution of states and compare to expected weights.
+    """
+    Compare observed state frequencies in the given samples to expected population percentages.
     
-    Args:
-        samples: List of sample items to analyze
-        
+    Parameters:
+        samples (iterable): Iterable of sample objects where each item has a `state` attribute (state code/name).
+    
     Returns:
-        DataFrame with state distribution comparison
+        pandas.DataFrame: A DataFrame with columns `State`, `Observed (%)`, and `Expected (%)`, sorted by `Expected (%)` in descending order.
     """
     logger.info("Analyzing state distribution...")
     
@@ -226,17 +234,18 @@ def analyze_state_distribution(samples):
 
 
 def plot_comparison_brazil_colors(df, title, x_column, output_dir=None, figsize=(12, 8)):
-    """Plot comparison between observed and expected percentages using Brazil's colors.
+    """
+    Render a side-by-side bar chart comparing observed and expected percentage distributions using Brazil's color palette.
     
-    Args:
-        df: DataFrame with the distribution data
-        title: Title for the plot
-        x_column: Column to use for x-axis labels
-        output_dir: Directory to save the plot (default: tests/results)
-        figsize: Size of the figure (width, height) in inches
+    Parameters:
+        df (pandas.DataFrame): DataFrame containing 'Observed (%)' and 'Expected (%)' columns and the x-axis labels column.
+        title (str): Plot title; also used to generate the output filename.
+        x_column (str): Name of the DataFrame column to use for x-axis tick labels.
+        output_dir (str | Path | None): Directory to save the generated PNG file. If None, saves to "tests/results".
+        figsize (tuple): Figure size in inches as (width, height).
     
     Returns:
-        Correlation coefficient between observed and expected values
+        float: Pearson correlation coefficient between the 'Observed (%)' and 'Expected (%)' columns.
     """
     plt.figure(figsize=figsize)
     plt.style.use('seaborn-v0_8-whitegrid')
@@ -290,11 +299,15 @@ def plot_comparison_brazil_colors(df, title, x_column, output_dir=None, figsize=
 
 
 def create_summary_plot(correlations, output_dir=None):
-    """Create a summary plot of all correlations.
+    """
+    Generate and save a summary bar plot of correlation values for multiple categories.
     
-    Args:
-        correlations: Dictionary of correlation values
-        output_dir: Directory to save the plot
+    Parameters:
+        correlations (dict): Mapping of category name to correlation coefficient (float between 0 and 1).
+        output_dir (str | pathlib.Path, optional): Directory where the plot will be saved. Defaults to "tests/results".
+    
+    Notes:
+        The plot is saved as "correlation_summary.png" in the specified output directory and includes an annotated average correlation and a qualitative status indicator.
     """
     categories = list(correlations.keys())
     values = [correlations[cat] for cat in categories]
@@ -362,14 +375,12 @@ def create_summary_plot(correlations, output_dir=None):
 @pytest.mark.asyncio
 async def test_weighted_distributions(sample_size=5000):
     """
-    Test if the weighted distributions match expected percentages.
+    Validate that generated first names, surnames, and states follow the expected weighted frequency distributions.
     
-    This comprehensive test verifies that names, surnames, and geographic
-    locations are being generated with proper weighted random selection
-    that matches real-world frequency distributions.
+    Generates a sample set, compares observed versus expected frequencies for first names, surnames, and states, emits CSVs and plots to tests/results, and asserts that each category and the overall average have correlation greater than 0.7.
     
-    Args:
-        sample_size: Number of samples to generate for testing
+    Parameters:
+        sample_size (int): Number of samples to generate for the test (default 5000).
     """
     # Configure logger
     log_file = Path("tests/results/weighted_test.log")

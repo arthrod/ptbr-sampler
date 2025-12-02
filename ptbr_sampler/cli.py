@@ -177,18 +177,16 @@ LOCATIONS_PATH = Option(
 
 
 def _format_document_lines(doc: dict[str, str]) -> list[str]:
-    """Format document information into display lines.
-
-    This function processes document information and formats it into
-    a list of strings suitable for display. It handles special
-    formatting for RG numbers which include state information.
-
-    Args:
-        doc: Dictionary containing document information
-             Keys can be: 'cpf', 'pis', 'cnpj', 'cei', 'rg', 'phone'
-
+    """
+    Format document entries into display-ready lines.
+    
+    Produces a list of strings for known document keys. Recognized keys: `cpf`, `rg`, `pis`, `cnpj`, `cei`, and `phone`. If `rg` contains a slash (`"/"`), the portion before the slash is shown as the number and the portion after as the issuing state (e.g., `"RG: 12345 (SP)"`).
+    
+    Parameters:
+        doc (dict[str, str]): Mapping of document type to value.
+    
     Returns:
-        List of formatted document strings
+        list[str]: Formatted document lines in the order CPF, RG, PIS, CNPJ, CEI, Telefone (if present).
     """
     doc_lines = []
 
@@ -220,30 +218,22 @@ def create_results_table(
     only_location: bool = False,
     only_document: bool = False,
 ) -> Table:
-    """Create a formatted table for displaying Brazilian sample data results.
-
-    This function creates a rich, formatted table that handles complex Brazilian name patterns,
-    including compound names, surnames with prefixes, and various document types.
-
-    Args:
-        results: List of tuples containing:
-                - location string
-                - NameComponents object (first_name, middle_name, surname)
-                - Dictionary of documents
-                - Dictionary of address data (street, neighborhood, building_number)
-        title: The title to display at the top of the table
-        return_only_name: If True, displays only name information
-        only_location: If True, displays only location information
-        only_document: If True, displays only document information
-
+    """
+    Builds a formatted Rich Table for displaying generated Brazilian sample results.
+    
+    Parameters:
+        results: List of results in one of two forms:
+            - New format: (location, NameComponents, documents, address_data)
+            - Old format: (location, NameComponents, documents)
+            - Or plain string values (each becomes a single-row entry).
+            `documents` is a dict of document fields; `address_data` may include `street`, `neighborhood`, `building_number`, and `phone`.
+        title: Table title shown at the top.
+        return_only_name: When True, include only name columns (omit location and address).
+        only_location: When True, omit name columns and show only location-related columns.
+        only_document: When True, show only an ID column and a combined documents column.
+    
     Returns:
-        Rich Table object formatted according to specifications
-
-    The table structure adapts based on the content type:
-    - Full display: ID, Name, Middle Name, Surname, Location, Documents
-    - Name only: ID, Name, Middle Name, Surname
-    - Location only: ID, Location
-    - Document only: ID, Documents
+        Table: A configured Rich Table containing one row per result, with columns adapted to the selected display mode.
     """
     table = Table(
         title=title,
@@ -377,52 +367,38 @@ async def sample(
     easy: int = EASY,
     append_to_jsonl: bool = APPEND_TO_JSONL,
 ) -> None:
-    """Generate random Brazilian samples with comprehensive information.
-
-    This function generates random Brazilian location, name, and document samples
-    based on the provided parameters. It handles various combinations of output
-    formats and ensures proper state handling for document generation.
-
-    Args:
-        qty: Number of samples to generate
-        city_only: Return only city names
-        state_abbr_only: Return only state abbreviations
-        state_full_only: Return only full state names
-        only_cep: Return only CEP
-        cep_without_dash: Format CEP without dash
-        time_period: Time period for name sampling
-        return_only_name: Return only names without location
-        name_raw: Return names in raw format (all caps)
-        json_path: Path to city/state data JSON file
-        names_path: Path to first names data file
-        middle_names_path: Path to middle names data file
-        only_surname: Return only surnames
-        top_40: Use only top 40 surnames
-        with_only_one_surname: Use single surname
-        always_middle: Always include middle name
-        only_middle: Return only middle names
-        always_cpf: Include CPF in documents
-        always_pis: Include PIS in documents
-        always_cnpj: Include CNPJ in documents
-        always_cei: Include CEI in documents
-        always_rg: Include RG in documents
-        only_cpf: Generate only CPF
-        only_pis: Generate only PIS
-        only_cnpj: Generate only CNPJ
-        only_cei: Generate only CEI
-        only_rg: Generate only RG
-        include_issuer: Include issuing state in RG
-        only_document: Return only documents
-        surnames_path: Path to surnames data file
-        locations_path: Path to locations data JSON file
-        save_to_jsonl: Path to save generated samples as JSONL
-        all_data: Include all possible data in the generated samples
-        batch: Maximum number of samples per batch before saving to file
-        easy: Easy mode with integer qty (enables API calls, all data, and auto-saves)
-        append_to_jsonl: Append to JSONL file instead of overwriting
-
+    """
+    Generate Brazilian sample records (locations, names, and documents) according to the provided CLI options and display progress and completion panels.
+    
+    This function drives the CLI workflow: it supports an "easy" quick-start mode, optional batching with JSONL output, optional API lookups for CEP/address data, rich progress reporting, and configurable name/document composition options.
+    
+    Parameters:
+        qty (int): Number of samples to generate.
+        make_api_call (bool): If true, perform external API lookups for CEP/address details.
+        save_to_jsonl (str | None): Path to save results as JSONL; when provided enables file output.
+        append_to_jsonl (bool): If true, append to the JSONL file instead of overwriting.
+        batch (int | None): Maximum samples per batch; when set and saving, processing may run in multiple batches.
+        easy (int | None): If set, enable easy mode: overrides qty, enables API calls and all-data mode, and auto-selects an output path.
+        all_data (bool): Include all available fields (names, location, documents, phone, etc.) in each sample.
+        return_only_name (bool): Return only the generated name (omit location/address) in results.
+        only_document (bool): Return only document fields (omit name and location).
+        cep_without_dash (bool): Format CEP values without the dash when returning CEPs.
+        include_issuer (bool): Include the issuing state for generated RG values.
+        append_to_jsonl (bool): Append to JSONL file if True; otherwise overwrite.
+        json_path (Path): Path to the cities/CEPs JSON data file.
+        names_path (Path): Path to first-names data file.
+        middle_names_path (Path): Path to middle-names data file.
+        surnames_path (Path): Path to surnames data file.
+        locations_path (Path): Path to locations data file.
+        time_period (TimePeriod): Time period to use when sampling names.
+        top_40 (bool): Restrict surname selection to the top 40 surnames.
+        only_surname, with_only_one_surname, always_middle, only_middle,
+        always_cpf, always_pis, always_cnpj, always_cei, always_rg, always_phone,
+        only_cpf, only_pis, only_cnpj, only_cei, only_rg, only_fone:
+            Flags controlling which name parts or document types are generated or forced; names are self-descriptive.
+    
     Raises:
-        typer.Exit: If an error occurs during execution
+        typer.Exit: On any fatal error during generation or saving, the CLI prints an error and exits with a non-zero code.
     """
 
     try:
@@ -530,6 +506,22 @@ async def sample(
                     
                     # Create progress callback
                     def create_progress_callback(samples_completed_val: int, batch_num_val: int, current_batch_size_val: int) -> callable:
+                        """
+                        Create a progress callback factory for updating Rich progress tasks during sampling.
+                        
+                        Returns a coroutine function that reports overall and per-batch progress and updates an optional API status task.
+                        
+                        Parameters:
+                            samples_completed_val (int): Number of samples already completed before the callback's batch.
+                            batch_num_val (int): Current batch index (1-based).
+                            current_batch_size_val (int): Number of samples in the current batch.
+                        
+                        Returns:
+                            callable: An async callable with signature (completed: int, stage: str | None) -> None that updates:
+                                - overall progress toward the total sample count,
+                                - current batch progress percentage,
+                                - API task description when `stage` indicates API activity.
+                        """
                         async def progress_callback(completed: int, stage: str | None = None) -> None:
                             # Use explicit parameter binding to avoid closure issues
                             nonlocal samples_completed_val, batch_num_val, current_batch_size_val
@@ -709,6 +701,13 @@ async def sample(
                 # Call the sample function with progress updates
                 async def progress_callback(completed: int, stage: str | None = None) -> None:
                     # Log significant progress stages
+                    """
+                    Update the Rich progress display and log notable progress stages based on the current completed count and optional stage label.
+                    
+                    Parameters:
+                        completed (int): Number of samples completed so far.
+                        stage (str | None): Optional textual stage/status used for logging and to enrich progress and stats displays (e.g., "API connecting", "processing", "completed").
+                    """
                     if stage and completed % max(1, qty // 10) == 0:
                         logger.debug(f'Progress: {completed}/{qty} samples - {stage}')
 

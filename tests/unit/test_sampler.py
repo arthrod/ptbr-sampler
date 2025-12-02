@@ -22,7 +22,17 @@ class TestSampler:
 
     @pytest.fixture(scope="class")
     def data_paths(self):
-        """Fixture providing the paths to data files used by the sampler."""
+        """
+        Provide file paths to test data used by the sampler.
+        
+        Returns:
+            paths (dict[str, str]): Mapping with keys:
+                - "json_path": path to cities_with_ceps.json
+                - "names_path": path to names_data.json
+                - "middle_names_path": path to middle_names.json
+                - "surnames_path": path to surnames_data.json
+                - "locations_path": path to locations_data.json
+        """
         return {
             "json_path": "ptbr_sampler/data/cities_with_ceps.json",
             "names_path": "ptbr_sampler/data/names_data.json",
